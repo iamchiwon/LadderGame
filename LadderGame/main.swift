@@ -7,48 +7,58 @@
 
 import Foundation
 
-struct SingleLadderGame {
-    struct LadderPlayer {
-        var name = ""
-    }
-    
-    static func readHeight() -> Int {
+class InputHandler: InputHandlable {
+    func getHeight() -> Int {
         print("사다리 높이를 입력해주세요.")
         let height = readLine() ?? ""
         return Int(height) ?? 0
     }
-    
-    static func readPlayerNames() -> [String] {
+
+    func getNames() -> [LadderPlayer] {
         print("참여할 사람 이름을 입력하세요.")
         let players = readLine() ?? ""
-        return players.split(separator: ",").map{String($0)}
-    }
-    
-    var height = 0
-    var players = [LadderPlayer]()
-    
-    mutating func run() {
-        self.height = SingleLadderGame.readHeight()
-        let names = SingleLadderGame.readPlayerNames()
-        self.players = names.map({LadderPlayer(name:$0)})
-        printLadders()
-    }
-    
-    func printLadders() {
-        for _ in 0..<height {
-            print("|", terminator:"")
-            for _ in 0..<players.count {
-                if Int(arc4random_uniform(2))==1 {
-                    print("---", "|", separator:"", terminator:"")
-                }
-                else {
-                    print("   ", "|", separator:"", terminator:"")
-                }
-            }
-            print()
-        }
+        return players.split(separator: ",")
+            .map { String($0) }
+            .map { LadderPlayer(name: $0) }
     }
 }
 
-var game = SingleLadderGame()
-game.run()
+class OutputHandler: OutputHandlable {
+    func printLadder(ladder: [String]) {
+        ladder.forEach { print($0) }
+    }
+}
+
+// -------------------------------
+
+struct LadderPlayer {
+    var name = ""
+}
+
+protocol InputHandlable {
+    func getHeight() -> Int
+    func getNames() -> [LadderPlayer]
+}
+
+protocol OutputHandlable {
+    func printLadder(ladder: [String])
+}
+
+func play(input: InputHandlable, output: OutputHandlable) {
+    let height = input.getHeight()
+    let players = input.getNames()
+
+    let ladder = (0 ..< height).map { _ -> String in
+        var line = "|"
+
+        (0 ..< players.count).forEach { _ in
+            line += Bool.random() ? "---|" : "   |"
+        }
+
+        return line
+    }
+
+    output.printLadder(ladder: ladder)
+}
+
+play(input: InputHandler(), output: OutputHandler())
